@@ -47,7 +47,7 @@ const char *argv[];
 	    RLa.ACNTDATE[11] = '0';
 	  }
 
-	  printf("%c %-12.12s %04d %-8.8s %-8.8s %04d -> %-8.8s %-8.8s %s %c %5ld recs\n",
+	  printf("%c %-12.12s %04d %-8.8s %-8.8s %04d -> %-8.8s %-8.8s %s %c %5u recs\n",
 		 (RL.ACNTCODE == 1) ? 'T' : 'R', RLa.ACNTDATE,
 		 ntohs(RL.ACNTID),
 		 RLa.ACNTUSER, RLa.ACNTILOC,

@@ -30,7 +30,7 @@ const char *logfilename;
 	/* logger(2,"RSCSACCT: open(%s) -> fd=%d\n",logfilename,rscslog); */
 
 	/* Preset what you can */
-	ASCII_TO_EBCDIC("HUJINJE ",RL.ACCTLOGU,8);
+	ASCII_TO_EBCDIC("HUJINJE ",RL.ACNTLOGU,8);
 	memset(RL.filler, E_SP,2);
 	memset(RL.filler2,E_SP,8);
 	ASCII_TO_EBCDIC("UNIX ",RL.ACNTSYS,5); /* XX: Something portable ? */

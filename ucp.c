@@ -39,24 +39,25 @@
 #define Rescan	14
 
 struct Commands {
+	int	code;      /* Moving int first for better alignment */
+	int	_pad;      /* Explicit padding for alignment */
 	char	*command;
-	int	code;
 	} commands[] = {
-	  { "EXIT", Exit },
-	  { "SHOW", Show },
-	  { "SHUT", Shut },
-	  { "START", Start },
-	  { "HELP", Help },
-	  { "QUEUE", Queue },
-	  { "STOP", Stop },
-	  { "FORCE", Force },
-	  { "DEBUG", Debug },
-	  { "LOGLEVEL", Loglevel },
-	  { "ROUTE", Route },
-	  { "GONE", Gone },
-	  { "UNGONE", Ungone },
-	  { "RESCAN", Rescan },
-	  { "", 0 }
+	  { Exit,   0, "EXIT" },
+	  { Show,   0, "SHOW" },
+	  { Shut,   0, "SHUT" },
+	  { Start,  0, "START" },
+	  { Help,   0, "HELP" },
+	  { Queue,  0, "QUEUE" },
+	  { Stop,   0, "STOP" },
+	  { Force,  0, "FORCE" },
+	  { Debug,  0, "DEBUG" },
+	  { Loglevel, 0, "LOGLEVEL" },
+	  { Route,  0, "ROUTE" },
+	  { Gone,   0, "GONE" },
+	  { Ungone, 0, "UNGONE" },
+	  { Rescan, 0, "RESCAN" },
+	  { 0,      0, "" }
 	};
 
 extern void process_cmd();
