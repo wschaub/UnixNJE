@@ -180,8 +180,8 @@ char	*argv[];
 	if (Bsmtp || ForcedMailer || origuser)
 	  sprintf(NjeFrom, "%.8s@%.8s", origuser, LOCAL_NAME);
 	else
-	  strncpy(NjeFrom, From, 19);
-	NjeFrom[20] = 0;
+	  strncpy(NjeFrom, From, sizeof(NjeFrom) - 1);
+	NjeFrom[sizeof(NjeFrom) - 1] = 0;  /* Ensure null termination */
 	fprintf(fd, "FRM: %-17.17s\n", NjeFrom);
 	fprintf(fd, "FMT: BINARY\nTYP: MAIL\nEXT: MAIL\nCLS: M\nFOR: QUMAIL\n");
 	if (Bsmtp || ForcedMailer)
