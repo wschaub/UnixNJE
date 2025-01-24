@@ -39,12 +39,13 @@ extern struct ENQUIRE Enquire;
 #define	EXPLICIT_ACK		0
 #define	IMPLICIT_ACK		1
 
+/* Function prototypes */
+static u_int32 get_host_ip_address(const int Index, const char *HostName);
+
 static struct	sockaddr_in	PassiveSocket;
 int		PassiveSocketChannel = -1,	/* On which we listen */
 		PassiveReadChannel = -1;   /* On which we wait for an initial
 					      VMnet control record */
-
-static u_int32	get_host_ip_address();
 
 extern int	errno;
 #ifdef __DARWIN_UNIX03
