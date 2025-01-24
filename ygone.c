@@ -23,12 +23,13 @@
 #include "clientutils.h"
 
 /* Hold the terminal characteristics in order to change and retore them: */
-struct	terminal_char {	/* Terminal characteristics */
-		unsigned char	class, type;
-		unsigned short	PageWidth;
-		long	BasicChars;
-		long	ExtChars;
-	} TerChar;
+struct terminal_char {  /* Terminal characteristics */
+	long    BasicChars;    /* Move long members first */
+	long    ExtChars;
+	unsigned short PageWidth;
+	unsigned char  class;
+	unsigned char  type;
+} TerChar;
 short	TerminalMailboxChan, TerminalChan;
 int	MessagesCount = 0;	/* So we can inform user how many new messages */
 
@@ -165,7 +166,7 @@ YGONE: Inform NJE transporter about your intention to disappear\n\
  | named /CONTINUE - only trap terminal messages and do not logout; this is
  | general and have no special connection to the NJE emulator.
  */
-void main(cc, vv)
+int main(cc, vv)
 char	**vv;
 int	cc;
 {
@@ -174,12 +175,13 @@ int	cc;
 	  add_gone();	/* Inform emulator about it. */
 	  printf("Your messages will be recorded while you are away.\n");
 	  logout_process();	/* Send him home */
-	  exit(0);
+	  return 0;
 	}
 	if (strcmp(vv[1], "-d") == 0) {	/* YGONE/DISABLE */
 	  remove_gone();
 	  display_file();
-	  exit(0);
+	  return 0;
 	}
 	usage();
+	return 1;  /* Return non-zero for error case */
 }
