@@ -35,6 +35,7 @@ extern	void	usage __(( void ));
 extern FILE *fopen();
 #endif
 
+typedef void (*outproc_t)(unsigned char *buf, int len, struct ndparam *ndp);
 
 /* From  370 Reference Summary:
 
@@ -76,8 +77,8 @@ char *fmt;
 int index;
 uint32_t *timep;
 {
-  eprintf(fmt,index);
-  eprintf("<IBM TIME>\n");
+  eprintf(fmt,index,0L,0L,0L,0L,0L,0L,0L,0L);
+  eprintf("<IBM TIME>\n",0L,0L,0L,0L,0L,0L,0L,0L,0L);
 }
 
 void
@@ -88,16 +89,16 @@ int index,len;
 	char Aline[200];
 	int i;
 
-	eprintf(prefix,index);
+	eprintf(prefix,index,0L,0L,0L,0L,0L,0L,0L,0L);
 	if (*buf != 0) {
 	  EBCDIC_TO_ASCII(buf,Aline,len);
 	  Aline[len] = 0;
-	  eprintf("A'%-*.*s'\n",len,len,Aline);
+	  eprintf("A'%-*.*s'\n",len,len,Aline,0L,0L,0L,0L,0L,0L);
 	} else {
-	  eprintf("X'");
+	  eprintf("X'",0L,0L,0L,0L,0L,0L,0L,0L,0L);
 	  for (i = 0; i < len; ++i)
-	    eprintf("%02X",buf[i]);
-	  eprintf("'\n");
+	    eprintf("%02X",buf[i],0L,0L,0L,0L,0L,0L,0L,0L);
+	  eprintf("'\n",0L,0L,0L,0L,0L,0L,0L,0L,0L);
 	}
 }
 
@@ -249,25 +250,28 @@ debug_jobtrailer(NJT,len)
 struct JOB_TRAILER *NJT;
 int len;
 {
-	eprintf ("NETWORK JOB TRAILER:  Len=%d\n",len);
-	eprintf ("   0:2  LENGTH   = D'%d'\n",ntohs(NJT->LENGTH));
-	eprintf ("   2:1  FLAG     = X'%02X'\n",NJT->FLAG);
-	eprintf ("   3:1  SEQUENCE = D'%d'\n",NJT->SEQUENCE);
-	eprintf ("   4:2  LENGTH_4 = D'%d'\n",ntohs(NJT->LENGTH_4));
-	eprintf ("   6:1  ID       = X'%02X'\n",NJT->ID);
-	eprintf ("   7:1  MODIFIER = X'%02X'\n",NJT->MODIFIER);
-	eprintf ("   8:1  NJTGFLG1 = X'%02X'\n",NJT->NJTGFLG1);
-	eprintf ("   9:1  NJTGXCLS = A'%c'\n",EBCDIC_ASCII[NJT->NJTGXCLS]);
-	etprintf("  12:8  NJTGSTRT = ",NJT->NJTGSTRT);
-	etprintf("  20:8  NJTGSTOP = ",NJT->NJTGSTOP);
-	eprintf ("  28:4  NJTGACPU = D'%d'\n",ntohl(NJT->NJTGACPU));
-	eprintf ("  32:4  NJTGALIN = D'%d'\n",ntohl(NJT->NJTGALIN));
-	eprintf ("  36:4  NJTGCARD = D'%d'\n",ntohl(NJT->NJTGCARD));
-	eprintf ("  40:4  NJTGEXCP = D'%d'\n",ntohl(NJT->NJTGEXCP));
-	eprintf ("  44:1  NJTGIXPR = D'%d'\n",NJT->NJTGIXPR);
-	eprintf ("  45:1  NJTGAXPR = D'%d'\n",NJT->NJTGAXPR);
-	eprintf ("  46:1  NJTGIOPR = D'%d'\n",NJT->NJTGIOPR);
-	eprintf ("  47:1  NJTGAOPR = D'%d'\n",NJT->NJTGAOPR);
+	eprintf("NETWORK JOB TRAILER:  Len=%d\n", len, 0L,0L,0L,0L,0L,0L,0L,0L);
+	eprintf("   0:2  LENGTH   = D'%d'\n", ntohs(NJT->LENGTH), 0L,0L,0L,0L,0L,0L,0L,0L);
+	eprintf("   2:1  FLAG     = X'%02X'\n", NJT->FLAG, 0L,0L,0L,0L,0L,0L,0L,0L);
+	eprintf("   3:1  SEQUENCE = D'%d'\n", NJT->SEQUENCE, 0L,0L,0L,0L,0L,0L,0L,0L);
+	eprintf("   4:2  LENGTH_4 = D'%d'\n", ntohs(NJT->LENGTH_4), 0L,0L,0L,0L,0L,0L,0L,0L);
+	eprintf("   6:1  ID       = X'%02X'\n", NJT->ID, 0L,0L,0L,0L,0L,0L,0L,0L);
+	eprintf("   7:1  MODIFIER = X'%02X'\n", NJT->MODIFIER, 0L,0L,0L,0L,0L,0L,0L,0L);
+	eprintf("   8:1  NJTGFLG1 = X'%02X'\n", NJT->NJTGFLG1, 0L,0L,0L,0L,0L,0L,0L,0L);
+	eprintf("   9:1  NJTGXCLS = A'%c'\n", EBCDIC_ASCII[NJT->NJTGXCLS], 0L,0L,0L,0L,0L,0L,0L,0L);
+	
+	// Fix etprintf calls by passing the array index instead of the whole array
+	etprintf("  12:8  NJTGSTRT = ", 0, &NJT->NJTGSTRT[0]);
+	etprintf("  20:8  NJTGSTOP = ", 0, &NJT->NJTGSTOP[0]);
+	
+	eprintf("  28:4  NJTGACPU = D'%d'\n", ntohl(NJT->NJTGACPU), 0L,0L,0L,0L,0L,0L,0L,0L);
+	eprintf("  32:4  NJTGALIN = D'%d'\n", ntohl(NJT->NJTGALIN), 0L,0L,0L,0L,0L,0L,0L,0L);
+	eprintf("  36:4  NJTGCARD = D'%d'\n", ntohl(NJT->NJTGCARD), 0L,0L,0L,0L,0L,0L,0L,0L);
+	eprintf("  40:4  NJTGEXCP = D'%d'\n", ntohl(NJT->NJTGEXCP), 0L,0L,0L,0L,0L,0L,0L,0L);
+	eprintf("  44:1  NJTGIXPR = D'%d'\n", NJT->NJTGIXPR, 0L,0L,0L,0L,0L,0L,0L,0L);
+	eprintf("  45:1  NJTGAXPR = D'%d'\n", NJT->NJTGAXPR, 0L,0L,0L,0L,0L,0L,0L,0L);
+	eprintf("  46:1  NJTGIOPR = D'%d'\n", NJT->NJTGIOPR, 0L,0L,0L,0L,0L,0L,0L,0L);
+	eprintf("  47:1  NJTGAOPR = D'%d'\n", NJT->NJTGAOPR, 0L,0L,0L,0L,0L,0L,0L,0L);
 }
 
 static char headerbuf[512] = "";
@@ -275,9 +279,7 @@ static int  headerlen = 0;
 static unsigned char prev_srcb = 0;
 
 void
-debug_headers(buf,buflen)
-unsigned char const *buf;
-const int buflen;
+debug_headers(const unsigned char *buf, const int buflen)
 {
 	int is_header = (*buf == NJH_SRCB ||
 			 *buf == NJT_SRCB ||
@@ -321,9 +323,7 @@ static	int	TypeCode, FileId,Format;
 
 
 static void
-Type2Str(type,str)
-     const int type;
-     char *str;
+Type2Str(const int type, char *str)
 {
 	if (type & F_PRINT)
 	  strcpy(str,"PRT");
@@ -335,10 +335,7 @@ Type2Str(type,str)
 
 
 FILE *
-dump_header(path,debugdump,binary)
-     char const *path;
-     const int debugdump;
-     int *binary;
+dump_header(const char *path, const int debugdump, int *binary)
 {
 	int	rc;
 	char	TypeStr[20];
@@ -379,9 +376,7 @@ dump_header(path,debugdump,binary)
 }
 
 void
-pad_to_size(line,cursize,wantedsize,padchar)
-     unsigned char *line, padchar;
-     int cursize, wantedsize;
+pad_to_size(unsigned char *line, int cursize, int wantedsize, unsigned char padchar)
 {
 	register unsigned char *p = line + cursize -1;
 	register int cnt = wantedsize - cursize;
@@ -397,11 +392,7 @@ char *Post = NULL; /* Post-write things.. Like Final Newline.. */
 
 
 void
-dump_punchline(ndp, buf, reclen, len, style)
-     struct ndparam *ndp;
-     unsigned char *buf;
-     register int len, reclen;
-     const int style;
+dump_punchline(struct ndparam *ndp, unsigned char *buf, int reclen, int len, const int style)
 {
 	if (style <= 0) {
 	  if (reclen != *buf)

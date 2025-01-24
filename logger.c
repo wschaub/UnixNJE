@@ -102,10 +102,7 @@ local_time()
 	*NextLinePosition = '\0'; \
 }
 
-void
-trace(p, n, lvl)
-const void *p;
-const int	n, lvl;
+void trace(const void *p, const int n, const int lvl)
 {
 	register int	count, i;
 	char	line[LINESIZE];
