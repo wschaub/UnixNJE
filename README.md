@@ -13,6 +13,24 @@ You will need to ask to peer with somebody on HNET to use this protocol. Contact
 
 UnixNJE is fully compatible with the NJE protocol and connects effortlessly to VM/SP or z/VM RSCS, NJE38 for MVS 3.8, SineNomine NJE, JNET for openVMS, NJE for Windows. 
 
+UnixNJE was tested in January 2025 for the following operating system. 
+
+OS Support
+========
+
+| Feature                    | Supported          |
+| -------------------------- | ------------------ |
+| Macos Sequoia              | :white_check_mark: |  
+| Ubuntu AMD64 22.04         | :white_check_mark: |  
+| Ubuntu AMD64 20.04         | :white_check_mark: |  
+| Ubuntu AMD64 18.04         | :white_check_mark: |   
+| Debian AMD64 22.04         | :white_check_mark: |  
+| Centos AMD64 7             | :white_check_mark: |  
+| Ubuntu AMD64 6             | :white_check_mark: |  
+| Windows untest             | :x:                |  
+
+  
+
 
 
 INSTALL
