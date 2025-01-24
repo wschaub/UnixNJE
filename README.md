@@ -18,7 +18,7 @@ UnixNJE was tested in January 2025 for the following operating system.
 OS Support
 ========
 
-| Feature                    | Supported          |
+| OS and version              | Supported          |
 | -------------------------- | ------------------ |
 | Macos Sequoia              | :white_check_mark: |  
 | Ubuntu AMD64 22.04         | :white_check_mark: |  
