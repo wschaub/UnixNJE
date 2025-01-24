@@ -285,11 +285,12 @@ Type2Str(type,str)
      char *str;
 {
 	if (type & F_PRINT)
-	  strcpy(str,"PRT");
+	  strncpy(str,"PRT",20);
 	else if (type & F_JOB)
-	  strcpy(str,"JOB");
+	  strncpy(str,"JOB",20);
 	else
-	  strcpy(str,"PUN");
+	  strncpy(str,"PUN",20);
+	str[19] = '\0';
 }
 
 static	unsigned char INMR01[7] = {0xE0,0xC9,0xD5,0xD4,0xD9,0xF0,0xF1};

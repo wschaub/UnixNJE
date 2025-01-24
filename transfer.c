@@ -38,8 +38,7 @@ transfer( transparency,path,Destin )
 	FILE	*TransferF;
 	char	ToA[80];
 	struct stat stats;
-/*	unsigned char ToUser[9],ToNode[9]; */
-	unsigned char buf[512]; /* longest NJE header is 257... */
+	char buf[512]; /* longest NJE header is 257... */
 	int	ebcdic = 0;
 	long	FmTpos = -1;
 	long	ToApos = -1;
