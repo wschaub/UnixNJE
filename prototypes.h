@@ -422,3 +422,35 @@ extern char	*upperstr __((char *str));
 extern char	*lowerstr __((char *str));
 
 #endif
+
+/* Function prototypes for all external functions */
+
+#include <sys/types.h>  /* For u_int32_t */
+
+/* __fopen.c */
+FILE *_nje_fopen(const char *filename, const char *type);
+FILE *_nje_freopen(const char *filename, const char *type, FILE *stream);
+FILE *_nje_fdopen(int fd, const char *type);
+int _nje_fclose(FILE *stream);
+
+/* unix_brdcst.c */
+int send_user(const char *User, char *msg);
+int send_gone(const char *user, char *msg);
+
+/* unix_tcp.c */
+static uint32_t get_host_ip_address(const int Index, const char *HostName);
+
+/* bmail.c */
+void process_bmail(const char *filename);
+
+/* libreceive.c */
+void etprintf(char *fmt, int index, uint32_t *timep);
+void debug_jobtrailer(struct JOB_TRAILER *NJT, int len);
+
+/* Removing conflicting prototypes that already exist:
+queue_file
+lowerstr
+despace
+send_nmr
+list_users
+*/

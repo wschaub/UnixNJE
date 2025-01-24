@@ -19,6 +19,7 @@
 #include "clientutils.h"
 #include "ndlib.h"
 #include <utime.h>
+#include <stdint.h>
 
 /* char LOCAL_NAME   [10];
    char BITNET_QUEUE [80];
@@ -73,7 +74,7 @@ long a1,a2,a3,a4,a5,a6,a7,a8,a9;
 void etprintf(fmt,index,timep)
 char *fmt;
 int index;
-u_int32 *timep;
+uint32_t *timep;
 {
   eprintf(fmt,index);
   eprintf("<IBM TIME>\n");
