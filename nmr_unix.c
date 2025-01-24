@@ -22,11 +22,11 @@
 
 #include "consts.h"
 #include "prototypes.h"
-#include <utmp.h>
+#include <utmpx.h>
 #include <time.h>
 
-#ifndef UTMP_FILE
-#define UTMP_FILE  "/etc/utmp"
+#ifndef UTMPX_FILE
+#define UTMPX_FILE  "/var/run/utmp"
 #endif
 
 
@@ -38,7 +38,7 @@ const char	 cmd;
 {
 	char	line[LINESIZE];
 	int	fd, lines;
-	struct utmp	Utmp;
+	struct utmpx	Utmp;
 	struct passwd	*pwd;
 	struct stat     stats;
 	time_t	now;
@@ -50,47 +50,44 @@ const char	 cmd;
 
 	time(&now);
 
-	if ((fd = open(UTMP_FILE,O_RDONLY,0600)) < 0) {
+	if ((fd = open(UTMPX_FILE, O_RDONLY, 0600)) < 0) {
 	  sprintf(line,
 		  "Can't open `%s' for reading.  No CPQ USER commands now.",
-		  UTMP_FILE);
-	  send_nmr(Faddress, Taddress, line, strlen(line),ASCII, CMD_MSG);
+		  UTMPX_FILE);
+	  send_nmr(Faddress, Taddress, line, strlen(line), ASCII, CMD_MSG);
 	} else {
 	  lines = 0;
-	  while (read(fd,(void*)&Utmp,sizeof Utmp) == sizeof Utmp) {
+	  while (read(fd, (void*)&Utmp, sizeof Utmp) == sizeof Utmp) {
 	    char uname[9];
-#ifdef LOGIN_PROCESS /* POSIX or what ?? */
-	    if (Utmp.ut_type != LOGIN_PROCESS &&
-		Utmp.ut_type != USER_PROCESS) continue;
-#endif
-	    if (*Utmp.ut_name == 0) continue; /* Try next */
-	    strncpy(uname,Utmp.ut_name,8);
+	    if (Utmp.ut_type != USER_PROCESS) continue;
+	    if (*Utmp.ut_user == 0) continue; /* Try next */
+	    strncpy(uname, Utmp.ut_user, 8);
 	    uname[8] = 0;
 	    pwd = getpwnam(uname);
 	    if (pwd == NULL) continue;	/* Hmm ??? */
 	    ++users;
 	    if (cmd == 'U' && (*UserName == 0 ||
-			       strcasecmp(UserName,uname) != 0))
+			       strcasecmp(UserName, uname) != 0))
 	      continue;		/* It's CPQ U <name> -command */
-	    sprintf(tty,"/dev/%s",Utmp.ut_line);
+	    sprintf(tty, "/dev/%s", Utmp.ut_line);
 	    stats.st_mode = 0;
-	    stat(tty,&stats);
+	    stat(tty, &stats);
 	    ++lines;
 	    if (1 == lines) {
-	      strcpy(line,"Login      Idle Terminal      Name");
+	      strcpy(line, "Login      Idle Terminal      Name");
 	      send_nmr(Faddress, Taddress, line, strlen(line), ASCII, CMD_MSG);
 	    }
 	    *idle = 0;
 	    idles = now - stats.st_atime;
 
-	    if (get_gone_user(uname,&s) >= 0) {
-	      strcpy(idle,"GONE");
+	    if (get_gone_user(uname, &s) >= 0) {
+	      strcpy(idle, "GONE");
 	    } else if (idles > 86400) {
-	      sprintf(idle,"%dd%dh",idles/86400,(idles % 86400) / 3600);
+	      sprintf(idle, "%dd%dh", idles/86400, (idles % 86400) / 3600);
 	    } else if (idles > 3599) {
-	      sprintf(idle,"%d:%02d",idles/3600,(idles/60)%60);
+	      sprintf(idle, "%d:%02d", idles/3600, (idles/60)%60);
 	    } else if (idles > 59) {
-	      sprintf(idle,"%d",idles/60);
+	      sprintf(idle, "%d", idles/60);
 	    }
 	    sprintf(line, "%-8s %6s %c%-12.12s %s",
 		    uname, idle,
@@ -99,16 +96,16 @@ const char	 cmd;
 	    send_nmr(Faddress, Taddress, line, strlen(line), ASCII, CMD_MSG);
 	  }
 	  if (cmd == 'U' && *UserName == 0) {
-	    sprintf(line,"CPQ: %4d USERS LOGGED ON",users);
+	    sprintf(line, "CPQ: %4d USERS LOGGED ON", users);
 	    send_nmr(Faddress, Taddress, line, strlen(line), ASCII, CMD_MSG);
 	  } else if (lines == 0) {
 	    if (*UserName == 0)
-	      strcpy(line,"No one is logged on.");
+	      strcpy(line, "No one is logged on.");
 	    else
 	      sprintf(line, "User %s not logged on.", UserName);
 	    send_nmr(Faddress, Taddress, line, strlen(line), ASCII, CMD_MSG);
 	  }
-	  close (fd);
+	  close(fd);
 	}
 }
 
