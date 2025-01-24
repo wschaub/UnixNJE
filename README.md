@@ -40,9 +40,11 @@ INSTALL
 
 2) then type "make" and watch it compile
   
-3) Create directory /etc/funetnje/ and create configuration in this directory
+3) Create directory /etc/funetnje/ and create funetnje.cf configuration file in this directory, according to below configuration instructions
 
-4) create a header.txt, a routes.txt file with your routes and inject them with the binroutes binary file
+4) create a header.txt, a routes.txt file with your routes and inject them with the **njeroutes** binary file
+
+5) Start the system by invoking the **funetnje** binary (which is a daemon) 
 
   
 
