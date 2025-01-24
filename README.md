@@ -27,7 +27,7 @@ OS Support
 | Debian AMD64 22.04         | :white_check_mark: |  
 | Centos AMD64 7             | :white_check_mark: |  
 | Ubuntu AMD64 6             | :white_check_mark: |  
-| Windows untest             | :x:                |  
+| Windows untested           | :x:                |  
 
   
 
