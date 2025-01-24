@@ -439,8 +439,11 @@ typedef unsigned char SRCBs;
 #define	SEND_DSH	1	/* Send DSH record			*/
 #define	SEND_DSH2	2	/* Send DSH record, fragment 2		*/
 
-
-
+/* Add these constants near the top of the file, with other constants */
+#define MAX_RETRIES         5    /* Maximum number of retry attempts */
+#define JOBHEADERSIZE      256   /* Size of job header */
+#define DATASETHEADERSIZE  256   /* Size of dataset header */
+#define JOBTRAILERSIZE     256   /* Size of job trailer */
 
 /* Commonly used macros. */
 #ifdef VMS
@@ -491,34 +494,40 @@ struct	QUEUE {
 #endif
 };
 
-/* File parameters for the file in process */
-struct	FILE_PARAMS {
-	long		format,		/* Character set		*/
-			type,		/* Mail/File			*/
-			FileId,		/* Pre-given ID	-- OID/FID use has  */
-			OurFileId,	/* Our local ID -- altered meanings */
-			flags,		/* Our internal flags		*/
-			RecordsCount,	/* How many records		*/
-			FileSize;	/* File size in bytes		*/
-	TIMETYPE	XmitStartTime,	/* For speed determination	*/
-			RecvStartTime;	/* In and outbound...		*/
-	time_t		NJHtime;	/* Arrived file's NJH time	*/
-	struct	QUEUE	*FileEntry;	/* Current file's queue ptr	*/
-	struct stat	FileStats;	/* standard (UNIX) file params	*/
-	char	SpoolFileName[LINESIZE],/* Spool file name		*/
-			FileName[20],	/* IBM Name			*/
-			FileExt[20],	/* IBM Extension		*/
-			From[20],	/* Sender			*/
-			To[20],		/* Receiver			*/
-			PrtTo[20],	/* SYSIN print routing		*/
-			PunTo[20],	/* SYSIN punch routing  	*/
-			line[20],	/* On which line to queue	*/
-			FormsName[10],	/* RSCS forms name		*/
-			DistName[10],	/* RSCS DIST name		*/
-			JobName[20],	/* RSCS job name		*/
-			JobClass,	/* RSCS class			*/
-			tag[137];	/* RSCS tag field		*/
-} ;
+/* Reorganize FILE_PARAMS struct for better alignment */
+struct FILE_PARAMS {
+        /* Start with largest alignment requirements */
+        struct stat     FileStats;      /* standard (UNIX) file params */
+        struct QUEUE    *FileEntry;     /* Current file's queue ptr */
+        
+        /* Time and long values */
+        TIMETYPE        XmitStartTime;  /* For speed determination */
+        TIMETYPE        RecvStartTime;  /* In and outbound... */
+        time_t          NJHtime;        /* Arrived file's NJH time */
+        long            format;         /* Character set */
+        long            type;           /* Mail/File */
+        long            FileId;         /* Pre-given ID -- OID/FID use has */
+        long            OurFileId;      /* Our local ID -- altered meanings */
+        long            flags;          /* Our internal flags */
+        long            RecordsCount;   /* How many records */
+        long            FileSize;       /* File size in bytes */
+        
+        /* Fixed-size character arrays */
+        char            SpoolFileName[LINESIZE];  /* Spool file name */
+        char            FileName[20];    /* IBM Name */
+        char            FileExt[20];    /* IBM Extension */
+        char            From[20];       /* Sender */
+        char            To[20];         /* Receiver */
+        char            PrtTo[20];      /* SYSIN print routing */
+        char            PunTo[20];      /* SYSIN punch routing */
+        char            line[20];       /* On which line to queue */
+        char            FormsName[10];  /* RSCS forms name */
+        char            DistName[10];   /* RSCS DIST name */
+        char            JobName[20];    /* RSCS job name */
+        char            tag[137];       /* RSCS tag field */
+        char            JobClass;       /* RSCS class */
+        char            _pad[7];        /* Explicit padding to 8-byte boundary */
+};
 
 struct	MESSAGE {			/* For outgoing interactive messages */
 	struct MESSAGE	*next;		/* Next in chain		*/
@@ -584,119 +593,115 @@ struct sockaddr {
 
 /* The definition of the lines */
 struct	LINE	{
-	short	type;		/* Line type (DMF, TCP, etc)		*/
-	char	device[DEVLEN];	/* Device name to use for DMF and ASYNC lines,
-				   DECnet name to connect to in DECnet links */
-	char	HostName[DEVLEN]; /* The other side name		*/
-	int	TimerIndex;	/* Index in timer queue for timeout	*/
-	int	TotalErrors,	/* Total number of errors accumulated 	*/
-		errors;		/* Consecutive errors (for error routine) */
-	LinkStates
-		state;		/* Main line state			*/
+	/* Start with largest alignment requirements */
+	struct  FILE_PARAMS InFileParams[MAX_STREAMS];   /* Params of file in process */
+	struct  FILE_PARAMS OutFileParams[MAX_STREAMS];
+	struct  STATS   stats;        /* Line's statistics */
+	struct  STATS   sumstats;     /* Line's cumulative statistics */
+	
+	/* Pointers */
+	void    *WritePending;         /* Flag that we have a write pending */
+	struct  QUEUE *QueueStart;     /* The files queued for this line */
+	struct  QUEUE *QueueEnd;       /* Both sides of the queue */
+	struct  MESSAGE *MessageQstart; /* Interactive messages waiting */
+	struct  MESSAGE *MessageQend;
+	
+	/* Large integers */
+	long    WrFiles, WrBytes;      /* Cumulative for monitoring .. */
+	long    RdFiles, RdBytes;
+	u_int32 TcpState;              /* Used during receipt to TCP stream */
+	u_int32 TcpXmitSize;           /* Up to what size to block TCP xmissions */
+	
+	/* Time values */
+	TIMETYPE        InAge;         /* Timestamp of last read */
+	TIMETYPE        XmitAge;       /* Timestamp of last write */
+	
+	/* Integer values */
+	int     TimerIndex;            /* Index in timer queue for timeout */
+	int     TotalErrors;           /* Total number of errors accumulated */
+	int     errors;                /* Consecutive errors (for error routine) */
+	int     IpPort;                /* The IP port number to use */
+	int     InBCB;                 /* Incoming BCB count */
+	int     OutBCB;                /* Outgoing BCB count */
+	int     CurrentStream;         /* The stream we are sending now */
+	int     ActiveStreams;         /* Bitmap of streams we are sending now */
+	int     FreeStreams;           /* Number of inactive streams we can use */
+	int     flags;                 /* Some status flags regarding this line */
+	int     MaxStreams;            /* Maximum streams active on this line */
+	int     LastActivatedStream;
+	int     RetryPeriods[MAX_RETRIES]; /* Can do longer waits */
+	int     RetryPeriod;          /* Active Retry period value */
+	int     RetryIndex;           /* in between failures.. 5, 10, 30, ..min */
+	int     QueuedFiles;          /* Number of files queued for this link */
+	int     QueuedFilesWaiting;   /* Non-hold, non-sending files */
+	int     XmitSize;             /* Size of contents of this buffer */
+	int     WriteSize;            /* When non-block writing, pre-written cnt */
+	int     RecvSize;             /* Size of receive buffer */
+	
+	/* Short integers */
+	short   TimeOut;              /* Timeout value */
+	short   PMaxXmitSize;         /* Proposed maximum xmission size */
+	short   MaxXmitSize;          /* Agreed maximum xmission size */
+	short   type;                 /* Line type (DMF, TCP, etc) */
+	
+	/* State enums */
+	LinkStates    state;        /* Main line state */
+	StreamStates  InStreamState[MAX_STREAMS];  /* This stream state */
+	StreamStates  OutStreamState[MAX_STREAMS]; /* This stream state */
+	
+	/* Character arrays */
+	char    device[DEVLEN];       /* Device name to use */
+	char    HostName[DEVLEN];     /* The other side name */
+	
+	/* Buffers */
+	unsigned char InBuffer[MAX_BUF_SIZE];    /* Buffer received */
+	unsigned char XmitBuffer[MAX_BUF_SIZE];  /* Last buffer sent */
+	
+	/* Headers */
+	unsigned char SavedJobHeader[MAX_STREAMS][JOBHEADERSIZE];
+	unsigned char SavedDatasetHeader[MAX_STREAMS][DATASETHEADERSIZE];
+	unsigned char SavedJobTrailer[MAX_STREAMS][JOBTRAILERSIZE];
+	int     SizeSavedJobHeader[MAX_STREAMS];
+	int     SizeSavedDatasetHeader[MAX_STREAMS];
+	int     SizeSavedJobTrailer[MAX_STREAMS];
 
-	int	IpPort,		/* The IP port number to use		*/
-		InBCB,		/* Incoming BCB count			*/
-		OutBCB,		/* Outgoing BCB count			*/
-		CurrentStream,	/* The stream we are sending now	*/
-		ActiveStreams,	/* Bitmap of streams we are sending now	*/
-		FreeStreams,	/* Number of inactive streams we can use */
-		flags;		/* Some status flags regarding this line. */
-	int	MaxStreams;	/* Maximum streams active on this line	*/
-	int	LastActivatedStream;
-#define MAX_RETRIES 10		/* Lets say, 9 different values..	*/
-	int	RetryPeriods[MAX_RETRIES];	/* Can do longer waits	*/
-	int	RetryPeriod;	/* Active Retry period value.		*/
-	int	RetryIndex;	/* in between failures.. 5, 10, 30, ..min */
 #ifdef UNIX
-	struct	sockaddr_in	/* For TcpIp communication		*/
-		SocketName;	/* The socket's name and address	*/
-	int	socket;		/* The socket FD			*/
-	int	socketpending;	/* Flag is the open is just starting..
-				   After all, we can do it somewhat
-				   asynchronoysly -- try anyway.	*/
-
-	FILE	*InFds[MAX_STREAMS];	/* The FD for each stream (Sending) */
-	long	InFilePos[MAX_STREAMS];
-	FILE	*OutFds[MAX_STREAMS];	/* The FD for each stream (Recv) */
-	long	OutFilePos[MAX_STREAMS];
-#endif /* UNIX */
-#ifdef VMS
-	short	channel,	/* IO channel				*/
-		iosb[4],	/* IOSB for that channel		*/
-		Siosb[4];	/* Another IOSB for full-duplex lines	*/
-
-# ifdef EXOS
-	struct SOioctl LocalSocket,	/* Local socket structure for EXOS */
-		RemoteSocket;	/* The other side			*/
-# endif
-# ifdef MULTINET
-	struct	sockaddr MNsocket;	/* Remote socket for MultiNet	*/
-# endif
-# ifdef DEC_TCP
-	struct	sockaddr LocalSocket, RemoteSocket;
-# endif
-	struct FAB InFabs[MAX_STREAMS];	 /* The FAB for each stream (Sending)*/
-	struct FAB OutFabs[MAX_STREAMS]; /* The FAB for each stream (Recv) */
-	struct RAB InRabs[MAX_STREAMS];		/* The RAB for each stream */
-	struct RAB OutRabs[MAX_STREAMS];
-#endif /* VMS */
-
-	StreamStates
-		InStreamState[MAX_STREAMS],	/* This stream state	*/
-		OutStreamState[MAX_STREAMS];	/* This stream state	*/
-	struct	FILE_PARAMS
-		InFileParams[MAX_STREAMS],	/* Params of file in process */
-		OutFileParams[MAX_STREAMS];
-
-	short	TimeOut,	/* Timeout value			*/
-		PMaxXmitSize,	/* Proposed maximum xmission size	*/
-		MaxXmitSize;	/* Agreed maximum xmission size		*/
-	struct	QUEUE		/* The files queued for this line:	*/
-		*QueueStart, *QueueEnd;	/* Both sides of the queue	*/
-	int	QueuedFiles,	/* Number of files queued for this link
-				   at this moment (held+sending+waiting)*/
-		QueuedFilesWaiting; /* Non-hold, non-sending files	*/
-	struct	MESSAGE		/* Interactive messages waiting for this line*/
-		*MessageQstart, *MessageQend;
-
-	TIMETYPE  InAge, XmitAge; /* Timestamps of last read/write */
-	int	XmitSize;	/* Size of contents of this buffer	*/
-	void	*WritePending;	/* Flag that we have a write pending	*/
-	int	WriteSize;	/* When non-block writing, pre-written cnt */
-	int	RecvSize;	/* Size of receive buffer (for TCP buffer
-				   completion				*/
-	unsigned long	TcpState, /* Used during receipt to TCP stream	*/
-		TcpXmitSize;	/* Up to what size to block TCP xmissions */
-
-	/* For lines that support transmit queue (XMIT_QUEUE flag is on).
-	   These are normally only reliable links (TCP and DECnet)	*/
-#ifdef	USE_XMIT_QUEUE
-	char	*XmitQueue[MAX_XMIT_QUEUE];	/* Pointers to buffers	*/
-	int	XmitQueueSize[MAX_XMIT_QUEUE];	/* Size of each entry	*/
-	int	FirstXmitEntry, LastXmitEntry;	/* The queue bounds	*/
+        /* UNIX-specific structures and pointers */
+        struct  sockaddr_in SocketName;    /* The socket's name and address */
+        FILE    *InFds[MAX_STREAMS];       /* The FD for each stream (Sending) */
+        FILE    *OutFds[MAX_STREAMS];      /* The FD for each stream (Recv) */
+        long    InFilePos[MAX_STREAMS];
+        long    OutFilePos[MAX_STREAMS];
+        int     socket;                    /* The socket FD */
+        int     socketpending;             /* Flag if the open is just starting */
 #endif
 
-	struct	STATS	stats;		/* Line's statistics		*/
-	struct	STATS	sumstats;	/* Line's cumulative statistics	*/
-	long	WrFiles, WrBytes;	/* Cumulative for monitoring .. */
-	long	RdFiles, RdBytes;
-	unsigned char InBuffer[MAX_BUF_SIZE],	/* Buffer received	*/
-		      XmitBuffer[MAX_BUF_SIZE];	/* Last buffer sent	*/
+#ifdef VMS
+	short   channel;                   /* IO channel */
+	short   iosb[4];                   /* IOSB for that channel */
+	short   Siosb[4];                  /* Another IOSB for full-duplex lines */
+# ifdef EXOS
+	struct  SOioctl   LocalSocket;        /* Local socket structure for EXOS */
+	struct  SOioctl   RemoteSocket;       /* The other side */
+# endif
+# ifdef MULTINET
+	struct  sockaddr    MNsocket;          /* Remote socket for MultiNet */
+# endif
+# ifdef DEC_TCP
+	struct  sockaddr    LocalSocket, RemoteSocket;
+# endif
+	struct  FAB   InFabs[MAX_STREAMS];    /* The FAB for each stream (Sending) */
+	struct  FAB   OutFabs[MAX_STREAMS];   /* The FAB for each stream (Recv) */
+	struct  RAB   InRabs[MAX_STREAMS];    /* The RAB for each stream */
+	struct  RAB   OutRabs[MAX_STREAMS];
+#endif
 
-	/* The received NJH, DSH, and NJT for analysis at reception stream
-	   closing time.  These buffers get defragmented headers, and are
-	   analyzed for appropriate contents at convenient moment..	*/
-#define JOBHEADERSIZE 216	/* 204 -- allocate multiple of 8..	*/
-#define DATASETHEADERSIZE 304	/* 296 with RSCS TAGs			*/
-#define	JOBTRAILERSIZE 56	/* 48					*/
-	unsigned char	SavedJobHeader[MAX_STREAMS][JOBHEADERSIZE],
-			SavedDatasetHeader[MAX_STREAMS][DATASETHEADERSIZE],
-			SavedJobTrailer[MAX_STREAMS][JOBTRAILERSIZE];
-	int		SizeSavedJobHeader[MAX_STREAMS],
-			SizeSavedDatasetHeader[MAX_STREAMS],
-			SizeSavedJobTrailer[MAX_STREAMS];
-	/* Actually we do nothing with NJT's -- except note their presence.
-	   MVS systems can (AND DO!) send multiple DSH:s within a file!    */
+#ifdef USE_XMIT_QUEUE
+	char    *XmitQueue[MAX_XMIT_QUEUE];    /* Pointers to buffers */
+	int     XmitQueueSize[MAX_XMIT_QUEUE]; /* Size of each entry */
+	int     FirstXmitEntry;                 /* The queue bounds */
+	int     LastXmitEntry;
+#endif
 };
 
 
