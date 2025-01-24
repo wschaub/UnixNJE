@@ -36,9 +36,15 @@ OS Support
 INSTALL
 ------
 
-get repo to your Linux/BSD/Macos (anything from the last 6-7 years should work)
+1) get repo to your Linux/BSD/Macos. 
 
-then type "make" and watch it compile
+2) then type "make" and watch it compile
+  
+3) Create directory /etc/funetnje/ and create configuration in this directory
+
+4) create a header.txt, a routes.txt file with your routes and inject them with the binroutes binary file
+
+  
 
 Configuration
 -------------
