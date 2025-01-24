@@ -215,34 +215,38 @@ static int
 __bintree_find(BT, datum, nearby)
 struct Bintree *BT;
 void *datum;
-const int nearby;	/* Accept any result, we need to find pivot point */
+const int nearby;        /* Accept any result, we need to find pivot point */
 {
-	int lo, hi, mid, rc = 0;
+        int lo, hi, mid, rc = 0;
 
-	/* We do the search by a BINARY search */
-	/* The elements get into the array in ascending
-	   order per used comparison routine */
+        /* We do the search by a BINARY search */
+        /* The elements get into the array in ascending
+           order per used comparison routine */
 
-	lo = 0; hi = BT->last-1;
-	mid = lo;
-	while (lo <= hi) {
-	  mid = (lo + hi) >> 1;
+        lo = 0; hi = BT->last-1;
+        mid = lo;
+        while (lo <= hi) {
+          mid = (lo + hi) >> 1;
 
-	  rc = (BT->eltcompare)(datum,BT_ENTRY(mid));
-	  if (rc == 0)
-	    return mid;
+          rc = (BT->eltcompare)(datum,BT_ENTRY(mid));
+          if (rc == 0) {
+            return mid;
+          }
 
-	  if (rc < 0)
-	    hi = mid-1;
-	  else
-	    lo = mid+1;
-	}
-	if (nearby)
-	  if (rc > 0)
-	    return mid+1;
-	  else
-	    return mid;
-	return -1; /* Not found */
+          if (rc < 0) {
+            hi = mid-1;
+          } else {
+            lo = mid+1;
+          }
+        }
+        if (nearby) {
+          if (rc > 0) {
+            return mid+1;
+          } else {
+            return mid;
+          }
+        }
+        return -1; /* Not found */
 }
 
 /* Feed in the new entry */

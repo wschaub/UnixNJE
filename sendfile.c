@@ -75,7 +75,7 @@ main(argc, argv)
 int	argc;
 char	*argv[];
 {
-	unsigned char	From[LSIZE], To[LSIZE], 
+	char	From[LSIZE], To[LSIZE], 
 			fname[20], ftype[20], Forms[9], Dist[9], FrUser[9];
 	char	FileName[LSIZE], tFileName[LSIZE];
 	char	FileClass = 0;
@@ -84,7 +84,8 @@ char	*argv[];
 	int	len, i;
 	unsigned char	ebcdicline[132+2+3];
 	unsigned char	outbuf[150];
-	unsigned char	line[1000], *p;
+	char	line[1000];
+	char	*p;
 	FILE	*fd, *infile;
 	int	rawpun = 0;
 	int	asaform = 0;
