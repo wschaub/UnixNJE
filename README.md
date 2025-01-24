@@ -38,6 +38,8 @@ OS Support
 INSTALL
 ------
 
+Watch this video for detailed installation and configuration instructions: https://youtu.be/1iHrNNH7plY
+
 1) get repo to your Linux/BSD/Macos. 
 
 2) then type "make" and watch it compile
